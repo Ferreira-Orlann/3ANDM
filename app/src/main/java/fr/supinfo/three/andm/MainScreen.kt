@@ -16,6 +16,7 @@ import coil.compose.rememberImagePainter
 import kotlinx.coroutines.launch
 
 
+
 @Composable
 fun MainScreen(
     recipes: List<Recipe>,
@@ -25,26 +26,38 @@ fun MainScreen(
     onRecipesLoaded: (List<Recipe>) -> Unit // Callback pour mettre à jour les recettes dans l'activité principale
 ) {
     var selectedCategory by remember { mutableStateOf("All") }
-    val categories = listOf("All", "Chicken", "Beef", "Soup", "Dessert", "Vegetarian", "French")
+    val categories = listOf("All", "chicken", "Beef", "Soup", "Dessert", "Vegetarian", "French")
 
     // CoroutineScope pour gérer les appels réseau
     val coroutineScope = rememberCoroutineScope()
 
     // Charger les recettes lorsque la recherche change
-    LaunchedEffect(searchQuery) {
-        if (searchQuery.isNotEmpty()) {
-            coroutineScope.launch {
-                try {
-                    val recipeApi = RecipeApi()
-                    val newRecipes = recipeApi.getRecipes(searchQuery)
-                    onRecipesLoaded(newRecipes)
-                } catch (e: Exception) {
-                    // Gérer l'erreur
-                    println("Erreur lors du chargement des recettes : ${e.message}")
+    LaunchedEffect(searchQuery, selectedCategory) {
+        coroutineScope.launch {
+            try {
+                val recipeApi = RecipeApi()
+                val newRecipes = recipeApi.searchRecipes(searchQuery)
+
+                val filteredRecipes = if (selectedCategory == "All") {
+                    newRecipes
+                } else {
+                    newRecipes.filter { recipe ->
+
+                        recipe.ingredients.any { it.contains(selectedCategory, ignoreCase = true) }
+                    }
                 }
+
+                println("🔍 Catégorie sélectionnée: $selectedCategory")
+                println("📌 Recettes avant filtrage: ${newRecipes.size}")
+                println("✅ Recettes après filtrage: ${filteredRecipes.size}")
+
+                onRecipesLoaded(filteredRecipes)
+            } catch (e: Exception) {
+                println("Erreur lors du chargement des recettes : ${e.message}")
             }
         }
     }
+
 
     Scaffold(
         topBar = {
@@ -77,14 +90,15 @@ fun MainScreen(
                 }
             }
 
-            // Liste des recettes filtrées
             if (recipes.isEmpty()) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
             } else {
                 LazyColumn {
                     items(recipes.filter {
-                        (selectedCategory == "All" || it.title.contains(selectedCategory, ignoreCase = true)) &&
-                                it.title.contains(searchQuery, ignoreCase = true)
+
+                        (selectedCategory == "All" || it.ingredients.any { ingredient ->
+                            ingredient.contains(selectedCategory, ignoreCase = true)
+                        }) && it.title.contains(searchQuery, ignoreCase = true)
                     }) { recipe ->
                         RecipeCard(recipe, onRecipeClick)
                     }
@@ -114,16 +128,3 @@ fun RecipeCard(recipe: Recipe, onRecipeClick: (Recipe) -> Unit) {
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun PreviewMainScreen() {
-    MainScreen(
-        recipes = listOf(
-            Recipe(1, "Test Recipe", "https://via.placeholder.com/150", listOf("Ingredient 1", "Ingredient 2"))
-        ),
-        onRecipeClick = {},
-        searchQuery = "",
-        onSearchQueryChange = {},
-        onRecipesLoaded = {}
-    )
-}

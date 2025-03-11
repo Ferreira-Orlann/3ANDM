@@ -29,7 +29,7 @@ fun RecipeApp() {
 
     LaunchedEffect(Unit) {
         isLoading = true
-        recipes = RecipeApi().getRecipes("")
+        recipes = RecipeApi().searchRecipes("")
         filteredRecipes = recipes
         isLoading = false
     }
@@ -58,7 +58,7 @@ fun RecipeApp() {
             var isLoading by remember { mutableStateOf(true) }
             LaunchedEffect(recipeId) {
                 isLoading = true
-                val recipes = RecipeApi().getRecipes("")
+                val recipes = RecipeApi().searchRecipes("")
                 println("Recettes récupérées: $recipes")
                 recipe = recipes.find { it.pk == recipeId }
                 isLoading = false

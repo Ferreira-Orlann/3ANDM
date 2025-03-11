@@ -21,7 +21,7 @@ fun DetailScreen(recipeId: Int, onBack: () -> Unit, paddingValues: Recipe) {
         isLoading = true
         try {
             // Récupérer toutes les recettes et trouver celle correspondant à l'ID
-            val recipes = RecipeApi().getRecipes("")
+            val recipes = RecipeApi().searchRecipes("")
             recipe = recipes.find { it.pk == recipeId }
         } catch (e: Exception) {
             println("Erreur lors de la récupération de la recette: ${e.message}")
