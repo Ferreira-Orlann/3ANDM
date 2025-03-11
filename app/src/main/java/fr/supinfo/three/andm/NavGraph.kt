@@ -25,6 +25,7 @@ fun RecipeApp() {
     var recipes by remember { mutableStateOf<List<Recipe>>(emptyList()) }
     var filteredRecipes by remember { mutableStateOf<List<Recipe>>(emptyList()) }
     var searchQuery by remember { mutableStateOf(TextFieldValue("")) }
+    var selectedCategory by remember { mutableStateOf("All") } // ✅ Ajouter la catégorie sélectionnée
     var isLoading by remember { mutableStateOf(true) }
 
     LaunchedEffect(Unit) {
@@ -34,17 +35,21 @@ fun RecipeApp() {
         isLoading = false
     }
 
-    LaunchedEffect(searchQuery.text) {
-        filteredRecipes = recipes.filter {
-            it.title.contains(searchQuery.text, ignoreCase = true) ||
-                    it.ingredients.any { ingredient ->
-                        ingredient.contains(searchQuery.text, ignoreCase = true)
-                    }
+    LaunchedEffect(searchQuery.text, selectedCategory) {
+        val query = if (searchQuery.text.isNotEmpty()) searchQuery.text else selectedCategory
+        val newRecipes = RecipeApi().searchRecipes(query)
+
+        filteredRecipes = if (selectedCategory == "All") {
+            newRecipes
+        } else {
+            newRecipes.filter { recipe ->
+                recipe.ingredients.any { it.contains(selectedCategory, ignoreCase = true) }
+            }
         }
+
+        println("🔍 Recherche ou catégorie sélectionnée : $query")
+        println("📌 Recettes trouvées : ${filteredRecipes.size}")
     }
-
-
-    Spacer(modifier = Modifier.height(16.dp))
 
     NavHost(navController, startDestination = "list") {
         composable("list") {
@@ -55,6 +60,8 @@ fun RecipeApp() {
                 },
                 searchQuery = searchQuery.text,
                 onSearchQueryChange = { newQuery -> searchQuery = TextFieldValue(newQuery) },
+                selectedCategory = selectedCategory, // ✅ Passer la catégorie sélectionnée
+                onCategoryChange = { newCategory -> selectedCategory = newCategory }, // ✅ Permettre de la mettre à jour
                 onRecipesLoaded = { newRecipes -> recipes = newRecipes }
             )
         }
@@ -65,10 +72,10 @@ fun RecipeApp() {
             val recipeId = backStackEntry.arguments?.getInt("id")
             var recipe by remember { mutableStateOf<Recipe?>(null) }
             var isLoading by remember { mutableStateOf(true) }
+
             LaunchedEffect(recipeId) {
                 isLoading = true
                 val recipes = RecipeApi().searchRecipes("")
-                println("Recettes récupérées: $recipes")
                 recipe = recipes.find { it.pk == recipeId }
                 isLoading = false
             }

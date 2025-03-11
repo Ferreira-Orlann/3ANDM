@@ -23,9 +23,10 @@ fun MainScreen(
     onRecipeClick: (Recipe) -> Unit,
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit,
+    selectedCategory: String,
+    onCategoryChange: (String) -> Unit,
     onRecipesLoaded: (List<Recipe>) -> Unit
 ) {
-    var selectedCategory by remember { mutableStateOf("All") }
     val categories = listOf("All", "Chicken", "Beef", "Soup", "Dessert", "Vegetarian", "French")
 
     val coroutineScope = rememberCoroutineScope()
@@ -35,8 +36,11 @@ fun MainScreen(
             try {
                 val recipeApi = RecipeApi()
 
-                // 🔥 Si searchQuery est vide, utiliser la catégorie sélectionnée
+                // ✅ Si "All" est sélectionné, `query` doit être vide
                 val query = if (searchQuery.isNotEmpty()) searchQuery else if (selectedCategory == "All") "" else selectedCategory
+
+                println("🔍 Requête envoyée: '$query'") // Log pour voir la requête exacte
+
                 val newRecipes = recipeApi.searchRecipes(query)
 
                 val filteredRecipes = if (selectedCategory == "All") {
@@ -47,42 +51,31 @@ fun MainScreen(
                     }
                 }
 
-                println("🔍 Recherche ou Catégorie sélectionnée: $query")
-                println("📌 Recettes avant filtrage: ${newRecipes.size}")
-                println("✅ Recettes après filtrage: ${filteredRecipes.size}")
-
-                onRecipesLoaded(newRecipes)
+                onRecipesLoaded(filteredRecipes)
             } catch (e: Exception) {
                 println("Erreur lors du chargement des recettes : ${e.message}")
             }
         }
     }
 
-
     Scaffold(
-        topBar = {
-            TopAppBar(title = { Text("Recettes") })
-        }
+        topBar = { TopAppBar(title = { Text("Recettes") }) }
     ) { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues)) {
-            // Barre de recherche
             TextField(
                 value = searchQuery,
                 onValueChange = onSearchQueryChange,
                 label = { Text("Rechercher une recette") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp)
+                modifier = Modifier.fillMaxWidth().padding(8.dp)
             )
+
             LazyRow(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(8.dp),
+                modifier = Modifier.fillMaxWidth().padding(8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(categories) { category ->
                     Button(
-                        onClick = { selectedCategory = category },
+                        onClick = { onCategoryChange(category) },
                         modifier = Modifier.padding(horizontal = 4.dp)
                     ) {
                         Text(category)
@@ -94,19 +87,7 @@ fun MainScreen(
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
             } else {
                 LazyColumn {
-                    items(recipes.filter {
-
-                        (selectedCategory == "All" || it.ingredients.any { ingredient ->
-                            ingredient.contains(selectedCategory, ignoreCase = true)
-                        }) && (it.ingredients.any { ingredient ->
-                            ingredient.contains(selectedCategory, ignoreCase = true)
-                        } ||
-                            it.title.contains(searchQuery, ignoreCase = true) ||
-                                    it.ingredients.any { ingredient ->
-                                        ingredient.contains(searchQuery, ignoreCase = true)
-                                    }
-                        )
-                    }) { recipe ->
+                    items(recipes) { recipe ->
                         RecipeCard(recipe, onRecipeClick)
                     }
                 }
@@ -114,6 +95,7 @@ fun MainScreen(
         }
     }
 }
+
 
 @Composable
 fun RecipeCard(recipe: Recipe, onRecipeClick: (Recipe) -> Unit) {
