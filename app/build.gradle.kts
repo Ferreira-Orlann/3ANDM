@@ -2,6 +2,11 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+
+    id("kotlin-kapt")
+    id("com.google.devtools.ksp")
+
+    kotlin("plugin.serialization")
 }
 
 android {
@@ -40,6 +45,33 @@ android {
 }
 
 dependencies {
+
+
+    implementation("androidx.activity:activity-compose:1.8.2")
+    implementation("androidx.compose.ui:ui:1.6.1")
+    implementation("androidx.compose.material:material:1.6.1")
+    implementation("androidx.compose.ui:ui-tooling-preview:1.6.1")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
+    implementation("androidx.navigation:navigation-compose:2.7.6")
+
+    val ktor_version = "2.1.0"
+    implementation("io.ktor:ktor-client-core:$ktor_version")
+    implementation("io.ktor:ktor-client-cio:$ktor_version")
+    implementation("io.ktor:ktor-serialization-kotlinx-json:$ktor_version")
+    implementation("io.ktor:ktor-client-content-negotiation:$ktor_version")
+    implementation("io.ktor:ktor-client-logging:$ktor_version")
+
+    // Room Database
+    implementation("androidx.room:room-runtime:2.6.1")
+    kapt("androidx.room:room-compiler:2.6.1")
+
+    // ViewModel et LiveData pour Jetpack Compose
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+
+    // Accompanist pour les images chargées depuis le web
+    implementation("com.google.accompanist:accompanist-coil:0.15.0")
+
+
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
