@@ -1,24 +1,3 @@
-/*package fr.supinfo.three.andm
-
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.*
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.unit.dp
-import androidx.navigation.NavType
-import androidx.navigation.compose.*
-import androidx.navigation.navArgument
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext*/
-
-
 package fr.supinfo.three.andm
 
 import androidx.compose.foundation.layout.*
@@ -55,53 +34,19 @@ fun RecipeApp() {
         isLoading = false
     }
 
-    LaunchedEffect(searchQuery.text) {
-        filteredRecipes = recipes.filter {
-            it.title.contains(searchQuery.text, ignoreCase = true)
-        }
-    }
-
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("Recipe Search", style = MaterialTheme.typography.h6) },
-                backgroundColor = MaterialTheme.colors.primarySurface
-            )
-        },
-
-        ) { paddingValues ->
-        // Display loading indicator while fetching data
-        if (isLoading) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
-        } else {
-            // Display list of recipes
-            Column(modifier = Modifier.padding(paddingValues)) {
-                filteredRecipes.forEach { recipe ->
-                    MainScreen(
-                        recipes = recipes,
-                        onRecipeClick = { recipe ->
-                            navController.navigate("detail/${recipe.pk}")
-                        }
-                    )
-                }
-            }
-        }
-    }
 
     Spacer(modifier = Modifier.height(16.dp))
 
     NavHost(navController, startDestination = "list") {
         composable("list") {
             MainScreen(
-                recipes = recipes,
+                recipes = filteredRecipes,
                 onRecipeClick = { recipe ->
                     navController.navigate("detail/${recipe.pk}")
-                }
+                },
+                searchQuery = searchQuery.text,
+                onSearchQueryChange = { newQuery -> searchQuery = TextFieldValue(newQuery) },
+                onRecipesLoaded = { newRecipes -> recipes = newRecipes }
             )
         }
         composable(
@@ -114,7 +59,7 @@ fun RecipeApp() {
             LaunchedEffect(recipeId) {
                 isLoading = true
                 val recipes = RecipeApi().getRecipes("")
-                println("Recettes récupérées: $recipes")  // Affichez les recettes récupérées dans les logs
+                println("Recettes récupérées: $recipes")
                 recipe = recipes.find { it.pk == recipeId }
                 isLoading = false
             }
