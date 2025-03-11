@@ -13,16 +13,15 @@ import androidx.compose.ui.layout.ContentScale
 
 @Composable
 fun DetailScreen(recipeId: Int, onBack: () -> Unit, paddingValues: Recipe) {
-    var recipe by remember { mutableStateOf<Recipe?>(null) }
+    var recipe by remember { mutableStateOf<RecipeDetail?>(null) } // Utilise RecipeDetail ici
     var isLoading by remember { mutableStateOf(true) }
 
     // Effet pour charger la recette
     LaunchedEffect(recipeId) {
         isLoading = true
         try {
-            // Récupérer toutes les recettes et trouver celle correspondant à l'ID
-            val recipes = RecipeApi().searchRecipes("")
-            recipe = recipes.find { it.pk == recipeId }
+            // Utiliser getRecipeById pour récupérer la recette par son ID
+            recipe = RecipeApi().getRecipeById(recipeId)
         } catch (e: Exception) {
             println("Erreur lors de la récupération de la recette: ${e.message}")
         } finally {

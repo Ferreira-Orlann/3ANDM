@@ -23,35 +23,35 @@ fun MainScreen(
     onRecipeClick: (Recipe) -> Unit,
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit,
-    onRecipesLoaded: (List<Recipe>) -> Unit // Callback pour mettre à jour les recettes dans l'activité principale
+    onRecipesLoaded: (List<Recipe>) -> Unit
 ) {
     var selectedCategory by remember { mutableStateOf("All") }
-    val categories = listOf("All", "chicken", "Beef", "Soup", "Dessert", "Vegetarian", "French")
+    val categories = listOf("All", "Chicken", "Beef", "Soup", "Dessert", "Vegetarian", "French")
 
-    // CoroutineScope pour gérer les appels réseau
     val coroutineScope = rememberCoroutineScope()
 
-    // Charger les recettes lorsque la recherche change
     LaunchedEffect(searchQuery, selectedCategory) {
         coroutineScope.launch {
             try {
                 val recipeApi = RecipeApi()
-                val newRecipes = recipeApi.searchRecipes(searchQuery)
+
+                // 🔥 Si searchQuery est vide, utiliser la catégorie sélectionnée
+                val query = if (searchQuery.isNotEmpty()) searchQuery else if (selectedCategory == "All") "" else selectedCategory
+                val newRecipes = recipeApi.searchRecipes(query)
 
                 val filteredRecipes = if (selectedCategory == "All") {
                     newRecipes
                 } else {
                     newRecipes.filter { recipe ->
-
                         recipe.ingredients.any { it.contains(selectedCategory, ignoreCase = true) }
                     }
                 }
 
-                println("🔍 Catégorie sélectionnée: $selectedCategory")
+                println("🔍 Recherche ou Catégorie sélectionnée: $query")
                 println("📌 Recettes avant filtrage: ${newRecipes.size}")
                 println("✅ Recettes après filtrage: ${filteredRecipes.size}")
 
-                onRecipesLoaded(filteredRecipes)
+                onRecipesLoaded(newRecipes)
             } catch (e: Exception) {
                 println("Erreur lors du chargement des recettes : ${e.message}")
             }
@@ -98,7 +98,14 @@ fun MainScreen(
 
                         (selectedCategory == "All" || it.ingredients.any { ingredient ->
                             ingredient.contains(selectedCategory, ignoreCase = true)
-                        }) && it.title.contains(searchQuery, ignoreCase = true)
+                        }) && (it.ingredients.any { ingredient ->
+                            ingredient.contains(selectedCategory, ignoreCase = true)
+                        } ||
+                            it.title.contains(searchQuery, ignoreCase = true) ||
+                                    it.ingredients.any { ingredient ->
+                                        ingredient.contains(searchQuery, ignoreCase = true)
+                                    }
+                        )
                     }) { recipe ->
                         RecipeCard(recipe, onRecipeClick)
                     }

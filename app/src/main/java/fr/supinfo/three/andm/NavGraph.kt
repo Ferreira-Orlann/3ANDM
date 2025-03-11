@@ -34,6 +34,15 @@ fun RecipeApp() {
         isLoading = false
     }
 
+    LaunchedEffect(searchQuery.text) {
+        filteredRecipes = recipes.filter {
+            it.title.contains(searchQuery.text, ignoreCase = true) ||
+                    it.ingredients.any { ingredient ->
+                        ingredient.contains(searchQuery.text, ignoreCase = true)
+                    }
+        }
+    }
+
 
     Spacer(modifier = Modifier.height(16.dp))
 

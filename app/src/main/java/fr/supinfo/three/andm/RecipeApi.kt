@@ -1,5 +1,6 @@
 package fr.supinfo.three.andm
 
+import android.util.Log
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.contentnegotiation.*
@@ -13,6 +14,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 
 private const val BASE_URL = "https://food2fork.ca/api/recipe"
+private const val API_URL = "https://food2fork.ca/api/recipe/search/?query="
 private const val API_KEY = "9c8b06d329136da358c2d00e76946b0111ce2c48"
 
 @Serializable
@@ -33,7 +35,7 @@ data class Recipe(
     val publisher: String,
     val source_url: String,
     val description: String,
-
+    val categories: List<String>? = null
 )
 
 @Serializable
@@ -59,7 +61,7 @@ class RecipeApi {
     }
 
     // 🔎 Récupérer des recettes avec une recherche
-    suspend fun searchRecipes(query: String, page: Int = 1): List<Recipe> = withContext(Dispatchers.IO) {
+    suspend fun getRecipes(query: String, page: Int = 1): List<Recipe> = withContext(Dispatchers.IO) {
         try {
             val response: HttpResponse = client.get("$BASE_URL/search/") {
                 parameter("query", query)
@@ -77,6 +79,18 @@ class RecipeApi {
             e.printStackTrace()
             return@withContext emptyList()
         }
+    }
+
+    suspend fun searchRecipes(query: String): List<Recipe> {
+        val url = "$API_URL$query"
+        Log.d("RecipeApi", "Fetching recipes from: $url")
+
+        val response: HttpResponse = client.get(url) {
+            headers {
+                append("Authorization", "Token $API_KEY")
+            }
+        }
+        return response.body<RecipeResponse>().results
     }
 
     suspend fun getRecipeById(id: Int): RecipeDetail? = withContext(Dispatchers.IO) {
