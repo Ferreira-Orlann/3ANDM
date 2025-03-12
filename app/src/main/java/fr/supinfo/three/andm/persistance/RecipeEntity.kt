@@ -5,7 +5,7 @@ import androidx.room.PrimaryKey
 
 @Entity("recipes")
 data class RecipeEntity (
-    @PrimaryKey() val id: Int,
+    @PrimaryKey() val recipeId: Int,
     val pk: Int,
     val title: String,
     val featured_image: String,

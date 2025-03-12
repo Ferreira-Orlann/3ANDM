@@ -1,5 +1,6 @@
 package fr.supinfo.three.andm.persistance
 
+import androidx.room.Dao
 import androidx.room.Embedded
 import androidx.room.Junction
 import androidx.room.Query
@@ -26,6 +27,7 @@ data class CategoryWithRecipes(
     val playlists: List<RecipeEntity>
 )
 
+@Dao
 abstract class CategoryRecipeRelationshipDao {
     @Transaction
     @Query("SELECT * FROM recipes")
