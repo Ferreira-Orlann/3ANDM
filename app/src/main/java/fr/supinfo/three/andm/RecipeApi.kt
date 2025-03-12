@@ -61,15 +61,19 @@ class RecipeApi {
     }
 
     // 🔎 Récupérer des recettes avec une recherche
-    suspend fun getRecipes(query: String, page: Int = 1): List<Recipe> = withContext(Dispatchers.IO) {
+    suspend fun searchRecipes(query: String, page: Int): List<Recipe> = withContext(Dispatchers.IO) {
         try {
-            val response: HttpResponse = client.get("$BASE_URL/search/") {
-                parameter("query", query)
+            val url = "$BASE_URL/search/?page=$page&query=$query"
+            println("🔍 URL de la requête : $url") // Log de l'URL
+
+            val response: HttpResponse = client.get(url) {
                 parameter("page", page)
+                parameter("query", query)
                 headers {
                     append(HttpHeaders.Authorization, "Token $API_KEY")
                 }
             }
+
             if (response.status == HttpStatusCode.OK) {
                 return@withContext response.body<RecipeResponse>().results
             } else {
@@ -81,7 +85,7 @@ class RecipeApi {
         }
     }
 
-    suspend fun searchRecipes(query: String): List<Recipe> {
+    suspend fun searchRecipess(query: String): List<Recipe> {
         val url = "$API_URL$query"
         Log.d("RecipeApi", "Fetching recipes from: $url")
 

@@ -25,24 +25,24 @@ fun MainScreen(
     onSearchQueryChange: (String) -> Unit,
     selectedCategory: String,
     onCategoryChange: (String) -> Unit,
-    onRecipesLoaded: (List<Recipe>) -> Unit
+    onRecipesLoaded: (List<Recipe>) -> Unit,
+    currentPage: Int, // ✅ Ajouter currentPage comme argument
+    onPageChange: (Int) -> Unit // ✅ Fonction pour gérer le changement de page
 ) {
     val categories = listOf("All", "Chicken", "Beef", "Soup", "Dessert", "Vegetarian", "French")
-
     val coroutineScope = rememberCoroutineScope()
 
-    LaunchedEffect(searchQuery, selectedCategory) {
+    val maxPages = 30  // ✅ Limite à 30 pages
+
+    LaunchedEffect(searchQuery, selectedCategory, currentPage) { // 🔥 Ajout de currentPage ici
         coroutineScope.launch {
             try {
                 val recipeApi = RecipeApi()
-
-                // ✅ Si "All" est sélectionné, `query` doit être vide
                 val query = if (searchQuery.isNotEmpty()) searchQuery else if (selectedCategory == "All") "" else selectedCategory
 
-                println("🔍 Requête envoyée: '$query'") // Log pour voir la requête exacte
+                println("🔍 Requête envoyée: '$query', Page: $currentPage")
 
-                val newRecipes = recipeApi.searchRecipes(query)
-
+                val newRecipes = recipeApi.searchRecipes(query, currentPage) // ✅ Page mise à jour
                 val filteredRecipes = if (selectedCategory == "All") {
                     newRecipes
                 } else {
@@ -83,11 +83,37 @@ fun MainScreen(
                 }
             }
 
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Button(
+                    onClick = { if (currentPage > 1) onPageChange(currentPage - 1) },
+                    enabled = currentPage > 1
+                ) {
+                    Text("Previous")
+                }
+
+                Text("Page $currentPage", modifier = Modifier.align(Alignment.CenterVertically))
+
+                Button(
+                    onClick = { if (currentPage < maxPages) onPageChange(currentPage + 1) },
+                    enabled = currentPage < maxPages
+                ) {
+                    Text("Next")
+                }
+            }
+
             if (recipes.isEmpty()) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
             } else {
                 LazyColumn {
-                    items(recipes) { recipe ->
+                    items(recipes.filter {
+                        it.title.contains(searchQuery, ignoreCase = true) ||
+                                it.ingredients.any { ingredient ->
+                                    ingredient.contains(searchQuery, ignoreCase = true)
+                                }
+                    }) { recipe ->
                         RecipeCard(recipe, onRecipeClick)
                     }
                 }
@@ -95,6 +121,9 @@ fun MainScreen(
         }
     }
 }
+
+
+
 
 
 @Composable

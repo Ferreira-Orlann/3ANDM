@@ -20,7 +20,6 @@ fun DetailScreen(recipeId: Int, onBack: () -> Unit, paddingValues: Recipe) {
     LaunchedEffect(recipeId) {
         isLoading = true
         try {
-            // Utiliser getRecipeById pour récupérer la recette par son ID
             recipe = RecipeApi().getRecipeById(recipeId)
         } catch (e: Exception) {
             println("Erreur lors de la récupération de la recette: ${e.message}")

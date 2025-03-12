@@ -25,19 +25,20 @@ fun RecipeApp() {
     var recipes by remember { mutableStateOf<List<Recipe>>(emptyList()) }
     var filteredRecipes by remember { mutableStateOf<List<Recipe>>(emptyList()) }
     var searchQuery by remember { mutableStateOf(TextFieldValue("")) }
-    var selectedCategory by remember { mutableStateOf("All") } // ✅ Ajouter la catégorie sélectionnée
+    var selectedCategory by remember { mutableStateOf("All") }
     var isLoading by remember { mutableStateOf(true) }
+    var currentPage by remember { mutableStateOf(1) }
 
     LaunchedEffect(Unit) {
         isLoading = true
-        recipes = RecipeApi().searchRecipes("")
+        recipes = RecipeApi().searchRecipes("", currentPage)
         filteredRecipes = recipes
         isLoading = false
     }
 
-    LaunchedEffect(searchQuery.text, selectedCategory) {
+    LaunchedEffect(searchQuery.text, selectedCategory, currentPage) {
         val query = if (searchQuery.text.isNotEmpty()) searchQuery.text else selectedCategory
-        val newRecipes = RecipeApi().searchRecipes(query)
+        val newRecipes = RecipeApi().searchRecipes(query, currentPage)
 
         filteredRecipes = if (selectedCategory == "All") {
             newRecipes
@@ -60,9 +61,11 @@ fun RecipeApp() {
                 },
                 searchQuery = searchQuery.text,
                 onSearchQueryChange = { newQuery -> searchQuery = TextFieldValue(newQuery) },
-                selectedCategory = selectedCategory, // ✅ Passer la catégorie sélectionnée
-                onCategoryChange = { newCategory -> selectedCategory = newCategory }, // ✅ Permettre de la mettre à jour
-                onRecipesLoaded = { newRecipes -> recipes = newRecipes }
+                selectedCategory = selectedCategory,
+                onCategoryChange = { newCategory -> selectedCategory = newCategory },
+                onRecipesLoaded = { newRecipes -> recipes = newRecipes },
+                currentPage = currentPage,
+                onPageChange = { newPage -> currentPage = newPage }
             )
         }
         composable(
@@ -75,7 +78,7 @@ fun RecipeApp() {
 
             LaunchedEffect(recipeId) {
                 isLoading = true
-                val recipes = RecipeApi().searchRecipes("")
+                val recipes = filteredRecipes
                 recipe = recipes.find { it.pk == recipeId }
                 isLoading = false
             }
@@ -94,6 +97,7 @@ fun RecipeApp() {
         }
     }
 }
+
 
 @Preview(showBackground = true)
 @Composable
