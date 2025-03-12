@@ -3,7 +3,7 @@ package fr.supinfo.three.andm.persistance
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
-@Entity
+@Entity("recipes")
 data class RecipeEntity (
     @PrimaryKey() val id: Int,
     val pk: Int,
