@@ -13,9 +13,25 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberImagePainter
+import fr.supinfo.three.andm.ui.theme.AnzacColor
 import kotlinx.coroutines.launch
 
 
+
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.*
+import androidx.compose.runtime.*
+
+import androidx.compose.ui.unit.dp
+import coil.compose.rememberImagePainter
+import fr.supinfo.three.andm.ui.theme.AnzacColor
+import kotlinx.coroutines.launch
 
 @Composable
 fun MainScreen(
@@ -58,15 +74,31 @@ fun MainScreen(
         }
     }
 
+
+
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Recettes") }) }
+        topBar = {
+            Column {
+                Spacer(modifier = Modifier.height(0.dp)) // Espace avant la barre supérieure
+                TopAppBar(
+                    title = { Text("Recettes", color = MaterialTheme.colors.onPrimary) },
+                    backgroundColor = AnzacColor
+                )
+            }
+        }
     ) { paddingValues ->
         Column(modifier = Modifier.padding(paddingValues)) {
             TextField(
                 value = searchQuery,
                 onValueChange = onSearchQueryChange,
-                label = { Text("Rechercher une recette") },
-                modifier = Modifier.fillMaxWidth().padding(8.dp)
+                label = { Text("Rechercher une recette", color = AnzacColor) },
+                modifier = Modifier.fillMaxWidth().padding(8.dp),
+                colors = TextFieldDefaults.textFieldColors(
+                    textColor = MaterialTheme.colors.onSurface,
+                    backgroundColor = AnzacColor.copy(alpha = 0.1f),
+                    focusedIndicatorColor = AnzacColor,
+                    unfocusedIndicatorColor = AnzacColor.copy(alpha = 0.5f)
+                )
             )
 
             LazyRow(
@@ -76,9 +108,11 @@ fun MainScreen(
                 items(categories) { category ->
                     Button(
                         onClick = { onCategoryChange(category) },
-                        modifier = Modifier.padding(horizontal = 4.dp)
+                        modifier = Modifier.padding(horizontal = 4.dp),
+                        colors = ButtonDefaults.buttonColors(backgroundColor = AnzacColor),
+                        shape = RoundedCornerShape(25.dp)
                     ) {
-                        Text(category)
+                        Text(category, color = MaterialTheme.colors.onPrimary)
                     }
                 }
             }
@@ -89,18 +123,24 @@ fun MainScreen(
             ) {
                 Button(
                     onClick = { if (currentPage > 1) onPageChange(currentPage - 1) },
-                    enabled = currentPage > 1
+                    enabled = currentPage > 1,
+                    colors = ButtonDefaults.buttonColors(backgroundColor = AnzacColor),
+                    shape = RoundedCornerShape(20.dp)
+
                 ) {
-                    Text("Previous")
+                    Text("Previous", color = MaterialTheme.colors.onPrimary)
                 }
 
                 Text("Page $currentPage", modifier = Modifier.align(Alignment.CenterVertically))
 
                 Button(
                     onClick = { if (currentPage < maxPages) onPageChange(currentPage + 1) },
-                    enabled = currentPage < maxPages
+                    enabled = currentPage < maxPages,
+                    colors = ButtonDefaults.buttonColors(backgroundColor = AnzacColor),
+                    shape = RoundedCornerShape(20.dp)
+
                 ) {
-                    Text("Next")
+                    Text("Next", color = MaterialTheme.colors.onPrimary)
                 }
             }
 
@@ -122,10 +162,6 @@ fun MainScreen(
     }
 }
 
-
-
-
-
 @Composable
 fun RecipeCard(recipe: Recipe, onRecipeClick: (Recipe) -> Unit) {
     Card(
@@ -133,7 +169,7 @@ fun RecipeCard(recipe: Recipe, onRecipeClick: (Recipe) -> Unit) {
             .fillMaxWidth()
             .padding(8.dp)
             .clickable { onRecipeClick(recipe) },
-        elevation = 4.dp
+
     ) {
         Column {
             Image(
@@ -145,4 +181,5 @@ fun RecipeCard(recipe: Recipe, onRecipeClick: (Recipe) -> Unit) {
         }
     }
 }
+
 

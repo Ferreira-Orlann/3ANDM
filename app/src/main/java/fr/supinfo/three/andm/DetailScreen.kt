@@ -9,7 +9,14 @@ import androidx.compose.ui.unit.dp
 import coil.compose.rememberImagePainter
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+
+
+
+
+import fr.supinfo.three.andm.ui.theme.AnzacColor
 
 @Composable
 fun DetailScreen(recipeId: Int, onBack: () -> Unit, paddingValues: Recipe) {
@@ -32,7 +39,17 @@ fun DetailScreen(recipeId: Int, onBack: () -> Unit, paddingValues: Recipe) {
     if (isLoading) {
         Scaffold { paddingValues ->
             Column(modifier = Modifier.padding(paddingValues)) {
-                Text("Chargement...")
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.food),
+                        contentDescription = "Chargement",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop // L'image couvre toute la taille de l'écran
+                    )
+                }
             }
         }
     } else {
@@ -40,14 +57,22 @@ fun DetailScreen(recipeId: Int, onBack: () -> Unit, paddingValues: Recipe) {
         recipe?.let {
             Scaffold(
                 topBar = {
-                    TopAppBar(
-                        title = { Text(it.title) },
-                        navigationIcon = {
-                            IconButton(onClick = onBack) {
-                                Icon(Icons.Default.ArrowBack, contentDescription = "Retour")
-                            }
-                        }
-                    )
+                    Column {
+                        Spacer(modifier = Modifier.height(0.dp))
+                        TopAppBar(
+                            title = { Text(it.title, color = MaterialTheme.colors.onPrimary) },
+                            navigationIcon = {
+                                IconButton(onClick = onBack) {
+                                    Icon(
+                                        Icons.Default.ArrowBack,
+                                        contentDescription = "Retour",
+                                        tint = MaterialTheme.colors.onPrimary
+                                    )
+                                }
+                            },
+                            backgroundColor = AnzacColor
+                        )
+                    }
                 }
             ) { paddingValues ->
                 Column(
@@ -65,9 +90,9 @@ fun DetailScreen(recipeId: Int, onBack: () -> Unit, paddingValues: Recipe) {
                     )
                     Spacer(modifier = Modifier.height(16.dp))
 
-                    Text("Ingrédients :", style = MaterialTheme.typography.h6)
+                    Text("Ingrédients :", style = MaterialTheme.typography.h6, color = AnzacColor)
                     it.ingredients.forEach { ingredient ->
-                        Text(text = "• $ingredient", style = MaterialTheme.typography.body1)
+                        Text(text = "• $ingredient", style = MaterialTheme.typography.body1, color = MaterialTheme.colors.onSurface)
                     }
                 }
             }
@@ -75,10 +100,11 @@ fun DetailScreen(recipeId: Int, onBack: () -> Unit, paddingValues: Recipe) {
             // Si la recette n'est pas trouvée
             Scaffold { paddingValues ->
                 Column(modifier = Modifier.padding(paddingValues)) {
-                    Text("Recette non trouvée.")
+                    Text("Recette non trouvée.", color = AnzacColor)
                 }
             }
         }
     }
 }
+
 

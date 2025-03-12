@@ -31,9 +31,11 @@ fun RecipeApp() {
 
     LaunchedEffect(Unit) {
         isLoading = true
+        navController.navigate("splashScreen") // Naviguer vers l'écran de splash pendant le chargement
         recipes = RecipeApi().searchRecipes("", currentPage)
         filteredRecipes = recipes
         isLoading = false
+        navController.popBackStack() // Revenir à la liste une fois les recettes chargées
     }
 
     LaunchedEffect(searchQuery.text, selectedCategory, currentPage) {
@@ -52,8 +54,12 @@ fun RecipeApp() {
         println("📌 Recettes trouvées : ${filteredRecipes.size}")
     }
 
-    NavHost(navController, startDestination = "list") {
-        composable("list") {
+    NavHost(navController, startDestination = "splashScreen") { // Modifier la destination de départ
+        composable("splashScreen") {
+            SplashScreen(navController)
+        }
+
+        composable("listScreen") {
             MainScreen(
                 recipes = filteredRecipes,
                 onRecipeClick = { recipe ->
@@ -68,6 +74,7 @@ fun RecipeApp() {
                 onPageChange = { newPage -> currentPage = newPage }
             )
         }
+
         composable(
             "detail/{id}",
             arguments = listOf(navArgument("id") { type = NavType.IntType })
@@ -83,20 +90,25 @@ fun RecipeApp() {
                 isLoading = false
             }
 
-            recipe?.let {
-                DetailScreen(
-                    recipeId = recipeId!!,
-                    onBack = { navController.popBackStack() },
-                    paddingValues = it
-                )
-            } ?: Scaffold { paddingValues ->
-                Column(modifier = Modifier.padding(paddingValues)) {
-                    Text("Chargement...")
+            if (isLoading) {
+                SplashScreen(navController)
+            } else {
+                recipe?.let {
+                    DetailScreen(
+                        recipeId = recipeId!!,
+                        onBack = { navController.popBackStack() },
+                        paddingValues = it
+                    )
+                } ?: Scaffold { paddingValues ->
+                    Column(modifier = Modifier.padding(paddingValues)) {
+                        Text("Chargement...") // Vous pouvez ici aussi afficher un message
+                    }
                 }
             }
         }
     }
 }
+
 
 
 @Preview(showBackground = true)
