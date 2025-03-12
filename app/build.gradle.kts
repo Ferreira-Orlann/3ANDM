@@ -71,8 +71,6 @@ dependencies {
     // Accompanist pour les images chargées depuis le web
     implementation("com.google.accompanist:accompanist-coil:0.15.0")
 
-
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
