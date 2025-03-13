@@ -20,13 +20,17 @@ interface RecipeDao {
         Log.d("RecipeDao", "💾 Après insertion : ${allRecipes.size} recettes en base")
     }
 
+    @Transaction
+    suspend fun insertOneRecipeDetail(recipe: RecipeDetailEntity) {
+        insertRecipeDetail(recipe)
+        Log.d("RecipeDao", "💾 Inserted recipe detail into database: ${recipe.title}")
+    }
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertRecipes(recipes: List<RecipeEntity>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertRecipeDetail(recipe: RecipeDetailEntity) {
-        Log.d("RecipeDao", "💾 Inserted recipe detail into database: ${recipe.title}")
-    }
+    suspend fun insertRecipeDetail(recipe: RecipeDetailEntity)
 
     @Query("SELECT * FROM recipes")
     suspend fun getAllRecipesFromDb(): List<RecipeEntity>
@@ -36,7 +40,6 @@ interface RecipeDao {
         Log.d("RecipeDao", "💾 Retrieved ${recipes.size} recipes from database")
         return recipes
     }
-
 
     @Query("SELECT * FROM recipes WHERE pk = :id")
     suspend fun getRecipeByIdFromDb(id: Int): RecipeEntity

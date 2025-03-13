@@ -104,12 +104,6 @@ class RecipeApi(private val database: RecipeDatabase) {
 
     suspend fun getRecipeById(id: Int): RecipeDetail? {
         try {
-            val cachedRecipe = recipeDao.getRecipeDetailByIdFromDb(id)
-            if (cachedRecipe != null) {
-                Log.d("RecipeApi", "✅ Recipe found in database: ${cachedRecipe.title}")
-                return cachedRecipe.toDomain()
-            }
-
             val response: HttpResponse = client.get("$BASE_URL/get/") {
                 parameter("id", id)
                 headers {
@@ -122,23 +116,23 @@ class RecipeApi(private val database: RecipeDatabase) {
                 Log.d("RecipeApi", "✅ Recipe retrieved from API: ${recipeDetail.title}")
 
                 // Sauvegarder les détails dans la base de données
-                recipeDao.insertRecipeDetail(recipeDetail.toEntity())
+                recipeDao.insertOneRecipeDetail(recipeDetail.toEntity())
                 Log.d("RecipeApi", "💾 Recipe detail saved in database")
 
                 return recipeDetail
             } else {
                 Log.e("RecipeApi", "❌ Error fetching recipe by ID: ${response.status}")
-                return null
+
+                val cachedRecipe = recipeDao.getRecipeDetailByIdFromDb(id)
+                Log.d("RecipeApi", "✅ Recipe found in database: ${cachedRecipe.title}")
+                return cachedRecipe.toDomain()
             }
         } catch (e: Exception) {
             Log.e("RecipeApi", "❌ Exception: ${e.message}")
             // Si l'API échoue, récupérer les détails de la recette depuis la base de données locale
             val cachedRecipe = recipeDao.getRecipeDetailByIdFromDb(id)
-            if (cachedRecipe != null) {
-                Log.d("RecipeApi", "✅ Recipe found in database: ${cachedRecipe.title}")
-                return cachedRecipe.toDomain()
-            }
-            return null
+            Log.d("RecipeApi", "✅ Recipe found in database: ${cachedRecipe.title}")
+            return cachedRecipe.toDomain()
         }
     }
 
