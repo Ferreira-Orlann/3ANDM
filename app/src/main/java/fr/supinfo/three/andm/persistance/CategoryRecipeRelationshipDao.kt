@@ -18,22 +18,22 @@ data class RecipeWithCategories(
 )
 
 data class CategoryWithRecipes(
-    @Embedded val song: CategoryEntity,
+    @Embedded val category: CategoryEntity, // ✅ Correction ici
     @Relation(
         parentColumn = "categoryId",
         entityColumn = "pk",
         associateBy = Junction(CategoryRecipeRelationshipEntity::class)
     )
-    val playlists: List<RecipeEntity>
+    val recipes: List<RecipeEntity> // ✅ Correction ici
 )
 
 @Dao
-abstract class CategoryRecipeRelationshipDao {
+interface CategoryRecipeRelationshipDao {
     @Transaction
     @Query("SELECT * FROM recipes")
-    abstract fun getRecipeWithCategories(): List<RecipeWithCategories>
+    fun getRecipeWithCategories(): List<RecipeWithCategories>
 
     @Transaction
     @Query("SELECT * FROM categories")
-    abstract fun getCategoryWithRecipes(): List<CategoryWithRecipes>
+    fun getCategoryWithRecipes(): List<CategoryWithRecipes>
 }

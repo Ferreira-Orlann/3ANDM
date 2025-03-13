@@ -5,22 +5,23 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Transaction
 import kotlinx.coroutines.delay
+import fr.supinfo.three.andm.persistance.RecipeEntity
+import fr.supinfo.three.andm.persistance.RecipeDetailEntity
 
 @Dao
 interface RecipeDao {
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertRecipes(recipes: List<RecipeEntity>) {
-        Log.d("RecipeDao", "💾 Inserted ${recipes.size} recipes into database")
-        // Ajouter un log pour afficher le contenu de la base de données après l'insertion
-
-
-
-        delay(3000)
+    @Transaction
+    suspend fun insertAllRecipes(recipes: List<RecipeEntity>) {
+        insertRecipes(recipes)
         val allRecipes = getAllRecipesFromDb()
-        Log.d("RecipeDao", "💾 Total recipes in DB after insert: ${allRecipes.size}")
+        Log.d("RecipeDao", "💾 Après insertion : ${allRecipes.size} recettes en base")
     }
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertRecipes(recipes: List<RecipeEntity>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertRecipeDetail(recipe: RecipeDetailEntity) {
