@@ -35,6 +35,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun MainScreen(
+    recipeApi: RecipeApi,
     recipes: List<Recipe>,
     onRecipeClick: (Recipe) -> Unit,
     searchQuery: String,
@@ -53,7 +54,7 @@ fun MainScreen(
     LaunchedEffect(searchQuery, selectedCategory, currentPage) { // 🔥 Ajout de currentPage ici
         coroutineScope.launch {
             try {
-                val recipeApi = RecipeApi()
+
                 val query = if (searchQuery.isNotEmpty()) searchQuery else if (selectedCategory == "All") "" else selectedCategory
 
                 println("🔍 Requête envoyée: '$query', Page: $currentPage")

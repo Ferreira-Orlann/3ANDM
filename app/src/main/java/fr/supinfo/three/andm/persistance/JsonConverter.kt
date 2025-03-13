@@ -5,14 +5,14 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-class JsonConverter {
+class Converters {
     @TypeConverter
-    fun fromListToJson(value: List<String>): String {
-        return Json.encodeToString<List<String>>(value)
+    fun fromIngredientsList(ingredients: List<String>): String {
+        return Json.encodeToString(ingredients)
     }
 
     @TypeConverter
-    fun fromJsonToList(value: String): List<String> {
-        return Json.decodeFromString<List<String>>(value);
+    fun toIngredientsList(data: String): List<String> {
+        return Json.decodeFromString(data)
     }
 }

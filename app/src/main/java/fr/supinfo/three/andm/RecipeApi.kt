@@ -1,6 +1,10 @@
 package fr.supinfo.three.andm
 
 import android.util.Log
+import fr.supinfo.three.andm.persistance.RecipeDao
+import fr.supinfo.three.andm.persistance.RecipeDatabase
+import fr.supinfo.three.andm.persistance.RecipeDetailEntity
+import fr.supinfo.three.andm.persistance.RecipeEntity
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.contentnegotiation.*
@@ -53,66 +57,139 @@ data class RecipeDetail(
     val date_updated: String
 )
 
-class RecipeApi {
+class RecipeApi(private val database: RecipeDatabase) {
     private val client = HttpClient {
         install(ContentNegotiation) {
             json(Json { ignoreUnknownKeys = true })
         }
     }
 
-    // 🔎 Récupérer des recettes avec une recherche
+    private val recipeDao: RecipeDao = database.recipeDao()
+
     suspend fun searchRecipes(query: String, page: Int): List<Recipe> = withContext(Dispatchers.IO) {
         try {
             val url = "$BASE_URL/search/?page=$page&query=$query"
-            println("🔍 URL de la requête : $url") // Log de l'URL
+            Log.d("RecipeApi", "🔍 Fetching recipes from: $url")
 
             val response: HttpResponse = client.get(url) {
-                parameter("page", page)
-                parameter("query", query)
                 headers {
                     append(HttpHeaders.Authorization, "Token $API_KEY")
                 }
             }
 
             if (response.status == HttpStatusCode.OK) {
-                return@withContext response.body<RecipeResponse>().results
+                val recipes = response.body<RecipeResponse>().results
+                Log.d("RecipeApi", "✅ ${recipes.size} recipes retrieved from API")
+
+                // Sauvegarder dans la base de données
+                recipeDao.insertRecipes(recipes.map { it.toEntity() })
+                Log.d("RecipeApi", "💾 Recipes saved in database")
+
+                return@withContext recipes
             } else {
-                return@withContext emptyList()
+                Log.e("RecipeApi", "❌ Error: ${response.status}")
+                // Si l'API échoue, récupérer les recettes depuis la base de données locale
+                val cachedRecipes = recipeDao.getAllRecipesFromDb()  // Tu devras créer une méthode dans RecipeDao pour cela
+                Log.d("RecipeApi", "💾 Retrieved ${cachedRecipes.size} recipes from database")
+                return@withContext cachedRecipes.map { it.toDomain() }
             }
         } catch (e: Exception) {
-            e.printStackTrace()
-            return@withContext emptyList()
+            Log.e("RecipeApi", "❌ Exception: ${e.message}")
+            // En cas d'exception, récupérer les recettes depuis la base de données locale
+            val cachedRecipes = recipeDao.getAllRecipesFromDb()  // Méthode à implémenter dans RecipeDao
+            Log.d("RecipeApi", "💾 Retrieved ${cachedRecipes.size} recipes from database")
+            return@withContext cachedRecipes.map { it.toDomain() }
         }
-    }
-
-    suspend fun searchRecipess(query: String): List<Recipe> {
-        val url = "$API_URL$query"
-        Log.d("RecipeApi", "Fetching recipes from: $url")
-
-        val response: HttpResponse = client.get(url) {
-            headers {
-                append("Authorization", "Token $API_KEY")
-            }
-        }
-        return response.body<RecipeResponse>().results
     }
 
     suspend fun getRecipeById(id: Int): RecipeDetail? = withContext(Dispatchers.IO) {
         try {
+            val cachedRecipe = recipeDao.getRecipeDetailByIdFromDb(id)
+            if (cachedRecipe != null) {
+                Log.d("RecipeApi", "✅ Recipe found in database: ${cachedRecipe.title}")
+                return@withContext cachedRecipe.toDomain()
+            }
+
             val response: HttpResponse = client.get("$BASE_URL/get/") {
                 parameter("id", id)
                 headers {
                     append(HttpHeaders.Authorization, "Token $API_KEY")
                 }
             }
+
             if (response.status == HttpStatusCode.OK) {
-                return@withContext response.body<RecipeDetail>()
+                val recipeDetail = response.body<RecipeDetail>()
+                Log.d("RecipeApi", "✅ Recipe retrieved from API: ${recipeDetail.title}")
+
+                // Sauvegarder les détails dans la base de données
+                recipeDao.insertRecipeDetail(recipeDetail.toEntity())
+                Log.d("RecipeApi", "💾 Recipe detail saved in database")
+
+                return@withContext recipeDetail
             } else {
+                Log.e("RecipeApi", "❌ Error fetching recipe by ID: ${response.status}")
                 return@withContext null
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            Log.e("RecipeApi", "❌ Exception: ${e.message}")
+            // Si l'API échoue, récupérer les détails de la recette depuis la base de données locale
+            val cachedRecipe = recipeDao.getRecipeDetailByIdFromDb(id)
+            if (cachedRecipe != null) {
+                Log.d("RecipeApi", "✅ Recipe found in database: ${cachedRecipe.title}")
+                return@withContext cachedRecipe.toDomain()
+            }
             return@withContext null
         }
     }
+
+    private fun Recipe.toEntity() = RecipeEntity(
+        pk = pk,
+        title = title,
+        featured_image = featured_image,
+        ingredients = ingredients,
+        rating = rating,
+        publisher = publisher,
+        source_url = source_url,
+        description = description
+    )
+
+    private fun RecipeEntity.toDomain() = Recipe(
+        pk = pk,
+        title = title,
+        featured_image = featured_image,
+        ingredients = ingredients,
+        rating = rating,
+        publisher = publisher,
+        source_url = source_url,
+        description = description
+    )
+
+
+    private fun RecipeDetail.toEntity() = RecipeDetailEntity(
+        pk = pk,
+        title = title,
+        featured_image = featured_image,
+        ingredients = ingredients,
+        rating = rating,
+        publisher = publisher,
+        source_url = source_url,
+        description = description,
+        cooking_instructions = cooking_instructions,
+        date_added = date_added,
+        date_updated = date_updated
+    )
+
+    private fun RecipeDetailEntity.toDomain() = RecipeDetail(
+        pk = pk,
+        title = title,
+        featured_image = featured_image,
+        ingredients = ingredients,
+        rating = rating,
+        publisher = publisher,
+        source_url = source_url,
+        description = description,
+        cooking_instructions = cooking_instructions,
+        date_added = date_added,
+        date_updated = date_updated
+    )
 }

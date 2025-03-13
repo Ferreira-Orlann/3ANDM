@@ -14,12 +14,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 
 
-
-
 import fr.supinfo.three.andm.ui.theme.AnzacColor
 
 @Composable
-fun DetailScreen(recipeId: Int, onBack: () -> Unit, paddingValues: Recipe) {
+fun DetailScreen(recipeId: Int, onBack: () -> Unit, paddingValues: Recipe, recipeApi: RecipeApi) {
     var recipe by remember { mutableStateOf<RecipeDetail?>(null) } // Utilise RecipeDetail ici
     var isLoading by remember { mutableStateOf(true) }
 
@@ -27,7 +25,7 @@ fun DetailScreen(recipeId: Int, onBack: () -> Unit, paddingValues: Recipe) {
     LaunchedEffect(recipeId) {
         isLoading = true
         try {
-            recipe = RecipeApi().getRecipeById(recipeId)
+            recipe = recipeApi.getRecipeById(recipeId)
         } catch (e: Exception) {
             println("Erreur lors de la récupération de la recette: ${e.message}")
         } finally {

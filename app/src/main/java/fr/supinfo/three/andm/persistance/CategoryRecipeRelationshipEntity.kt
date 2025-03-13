@@ -2,8 +2,8 @@ package fr.supinfo.three.andm.persistance
 
 import androidx.room.Entity
 
-@Entity(primaryKeys = ["recipeId", "categoryId"])
+@Entity(primaryKeys = ["pk", "categoryId"])
 data class CategoryRecipeRelationshipEntity(
-    val recipeId: Int,
+    val pk: Int,
     val categoryId: Int
 )

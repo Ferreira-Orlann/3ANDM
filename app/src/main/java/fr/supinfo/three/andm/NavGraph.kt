@@ -15,13 +15,15 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
+import fr.supinfo.three.andm.persistance.RecipeDatabase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 
 @Composable
-fun RecipeApp() {
+fun RecipeApp(database: RecipeDatabase) {
     val navController = rememberNavController()
+    val recipeApi = remember { RecipeApi(database) }
     var recipes by remember { mutableStateOf<List<Recipe>>(emptyList()) }
     var filteredRecipes by remember { mutableStateOf<List<Recipe>>(emptyList()) }
     var searchQuery by remember { mutableStateOf(TextFieldValue("")) }
@@ -32,7 +34,7 @@ fun RecipeApp() {
     LaunchedEffect(Unit) {
         isLoading = true
         navController.navigate("splashScreen") // Naviguer vers l'écran de splash pendant le chargement
-        recipes = RecipeApi().searchRecipes("", currentPage)
+        recipes = recipeApi.searchRecipes("", currentPage)
         filteredRecipes = recipes
         isLoading = false
         navController.popBackStack() // Revenir à la liste une fois les recettes chargées
@@ -40,7 +42,7 @@ fun RecipeApp() {
 
     LaunchedEffect(searchQuery.text, selectedCategory, currentPage) {
         val query = if (searchQuery.text.isNotEmpty()) searchQuery.text else selectedCategory
-        val newRecipes = RecipeApi().searchRecipes(query, currentPage)
+        val newRecipes = recipeApi.searchRecipes(query, currentPage)
 
         filteredRecipes = if (selectedCategory == "All") {
             newRecipes
@@ -61,6 +63,7 @@ fun RecipeApp() {
 
         composable("listScreen") {
             MainScreen(
+                recipeApi = recipeApi,
                 recipes = filteredRecipes,
                 onRecipeClick = { recipe ->
                     navController.navigate("detail/${recipe.pk}")
@@ -97,7 +100,8 @@ fun RecipeApp() {
                     DetailScreen(
                         recipeId = recipeId!!,
                         onBack = { navController.popBackStack() },
-                        paddingValues = it
+                        paddingValues = it,
+                        recipeApi = recipeApi,
                     )
                 } ?: Scaffold { paddingValues ->
                     Column(modifier = Modifier.padding(paddingValues)) {
@@ -111,8 +115,3 @@ fun RecipeApp() {
 
 
 
-@Preview(showBackground = true)
-@Composable
-fun PreviewRecipeApp() {
-    RecipeApp()
-}

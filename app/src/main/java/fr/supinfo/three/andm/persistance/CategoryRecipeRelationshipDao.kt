@@ -10,7 +10,7 @@ import androidx.room.Transaction
 data class RecipeWithCategories(
     @Embedded val recipe: RecipeEntity,
     @Relation(
-        parentColumn = "recipeId",
+        parentColumn = "pk",
         entityColumn = "categoryId",
         associateBy = Junction(CategoryRecipeRelationshipEntity::class)
     )
@@ -21,7 +21,7 @@ data class CategoryWithRecipes(
     @Embedded val song: CategoryEntity,
     @Relation(
         parentColumn = "categoryId",
-        entityColumn = "recipeId",
+        entityColumn = "pk",
         associateBy = Junction(CategoryRecipeRelationshipEntity::class)
     )
     val playlists: List<RecipeEntity>
