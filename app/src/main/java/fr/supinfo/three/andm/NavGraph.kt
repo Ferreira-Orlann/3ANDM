@@ -33,11 +33,11 @@ fun RecipeApp(database: RecipeDatabase) {
 
     LaunchedEffect(Unit) {
         isLoading = true
-        navController.navigate("splashScreen") // Naviguer vers l'écran de splash pendant le chargement
+        navController.navigate("splashScreen")
         recipes = recipeApi.searchRecipes("", currentPage)
         filteredRecipes = recipes
         isLoading = false
-        navController.popBackStack() // Revenir à la liste une fois les recettes chargées
+        navController.popBackStack()
     }
 
     LaunchedEffect(searchQuery.text, selectedCategory, currentPage) {
@@ -51,12 +51,9 @@ fun RecipeApp(database: RecipeDatabase) {
                 recipe.ingredients.any { it.contains(selectedCategory, ignoreCase = true) }
             }
         }
-
-        println("🔍 Recherche ou catégorie sélectionnée : $query")
-        println("📌 Recettes trouvées : ${filteredRecipes.size}")
     }
 
-    NavHost(navController, startDestination = "splashScreen") { // Modifier la destination de départ
+    NavHost(navController, startDestination = "splashScreen") {
         composable("splashScreen") {
             SplashScreen(navController)
         }
@@ -105,13 +102,12 @@ fun RecipeApp(database: RecipeDatabase) {
                     )
                 } ?: Scaffold { paddingValues ->
                     Column(modifier = Modifier.padding(paddingValues)) {
-                        Text("Chargement...") // Vous pouvez ici aussi afficher un message
+                        Text("Chargement...")
                     }
                 }
             }
         }
     }
 }
-
 
 

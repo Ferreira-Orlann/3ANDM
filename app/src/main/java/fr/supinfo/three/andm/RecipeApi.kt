@@ -69,8 +69,6 @@ class RecipeApi(private val database: RecipeDatabase) {
     suspend fun searchRecipes(query: String, page: Int): List<Recipe> {
         try {
             val url = "$BASE_URL/search/?page=$page&query=$query"
-            Log.d("RecipeApi", "🔍 Fetching recipes from: $url")
-
             val response: HttpResponse = client.get(url) {
                 headers {
                     append(HttpHeaders.Authorization, "Token $API_KEY")
@@ -79,39 +77,16 @@ class RecipeApi(private val database: RecipeDatabase) {
 
             if (response.status == HttpStatusCode.OK) {
                 val recipes = response.body<RecipeResponse>().results
-                Log.d("RecipeApi", "✅ ${recipes.size} recipes retrieved from API")
 
-                // Sauvegarder dans la base de données
                 recipeDao.insertAllRecipes(recipes.map { it.toEntity() })
-                Log.d("RecipeApi", "💾 Recipes saved in database")
-
                 return recipes
             } else {
-                Log.e("RecipeApi", "❌ Error: ${response.status}")
-
-                if (query.isEmpty()) {
-                    val cachedRecipes = recipeDao.getAllRecipesFromDb()
-                    Log.d("RecipeApi", "💾 Retrieved ${cachedRecipes.size} recipes from database")
-                    return cachedRecipes.map { it.toDomain() }
-                }else{
-                    val cachedRecipes = recipeDao.getAllRecipesFromDb()
-                    Log.d("RecipeApi", "💾 Retrieved ${cachedRecipes.size} recipes from database")
-                    return cachedRecipes.map { it.toDomain() }
-                }
-
+                val cachedRecipes = recipeDao.getAllRecipesFromDb()
+                return cachedRecipes.map { it.toDomain() }
             }
         } catch (e: Exception) {
-            Log.e("RecipeApi", "❌ Exception: ${e.message}")
-            // En cas d'exception, récupérer les recettes depuis la base de données locale
-            if (query.isEmpty()) {
-                val cachedRecipes = recipeDao.getAllRecipesFromDb()
-                Log.d("RecipeApi", "💾 Retrieved ${cachedRecipes.size} recipes from database")
-                return cachedRecipes.map { it.toDomain() }
-            }else{
-                val cachedRecipes = recipeDao.getAllRecipesFromDb()
-                Log.d("RecipeApi", "💾 Retrieved ${cachedRecipes.size} recipes from database")
-                return cachedRecipes.map { it.toDomain() }
-            }
+            val cachedRecipes = recipeDao.getAllRecipesFromDb()
+            return cachedRecipes.map { it.toDomain() }
         }
     }
 
@@ -126,25 +101,15 @@ class RecipeApi(private val database: RecipeDatabase) {
 
             if (response.status == HttpStatusCode.OK) {
                 val recipeDetail = response.body<RecipeDetail>()
-                Log.d("RecipeApi", "✅ Recipe retrieved from API: ${recipeDetail.title}")
 
-                // Sauvegarder les détails dans la base de données
                 recipeDao.insertOneRecipeDetail(recipeDetail.toEntity())
-                Log.d("RecipeApi", "💾 Recipe detail saved in database")
-
                 return recipeDetail
             } else {
-                Log.e("RecipeApi", "❌ Error fetching recipe by ID: ${response.status}")
-
                 val cachedRecipe = recipeDao.getRecipeDetailByIdFromDb(id)
-                Log.d("RecipeApi", "✅ Recipe found in database: ${cachedRecipe.title}")
                 return cachedRecipe.toDomain()
             }
         } catch (e: Exception) {
-            Log.e("RecipeApi", "❌ Exception: ${e.message}")
-            // Si l'API échoue, récupérer les détails de la recette depuis la base de données locale
             val cachedRecipe = recipeDao.getRecipeDetailByIdFromDb(id)
-            Log.d("RecipeApi", "✅ Recipe found in database: ${cachedRecipe.title}")
             return cachedRecipe.toDomain()
         }
     }

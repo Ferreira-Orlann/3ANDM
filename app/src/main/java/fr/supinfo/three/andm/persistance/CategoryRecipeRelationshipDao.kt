@@ -18,13 +18,13 @@ data class RecipeWithCategories(
 )
 
 data class CategoryWithRecipes(
-    @Embedded val category: CategoryEntity, // ✅ Correction ici
+    @Embedded val category: CategoryEntity,
     @Relation(
         parentColumn = "categoryId",
         entityColumn = "pk",
         associateBy = Junction(CategoryRecipeRelationshipEntity::class)
     )
-    val recipes: List<RecipeEntity> // ✅ Correction ici
+    val recipes: List<RecipeEntity>
 )
 
 @Dao

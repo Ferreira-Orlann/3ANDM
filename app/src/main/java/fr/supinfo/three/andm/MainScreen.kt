@@ -32,7 +32,6 @@ import androidx.compose.ui.unit.dp
 import coil.compose.rememberImagePainter
 import fr.supinfo.three.andm.ui.theme.AnzacColor
 import kotlinx.coroutines.launch
-
 @Composable
 fun MainScreen(
     recipeApi: RecipeApi,
@@ -43,34 +42,26 @@ fun MainScreen(
     selectedCategory: String,
     onCategoryChange: (String) -> Unit,
     onRecipesLoaded: (List<Recipe>) -> Unit,
-    currentPage: Int, // ✅ Ajouter currentPage comme argument
-    onPageChange: (Int) -> Unit // ✅ Fonction pour gérer le changement de page
+    currentPage: Int,
+    onPageChange: (Int) -> Unit
 ) {
     val categories = listOf("All", "Chicken", "Beef", "Soup", "Dessert", "Vegetarian", "French")
     val coroutineScope = rememberCoroutineScope()
 
-    val maxPages = 30  // ✅ Limite à 30 pages
-
-    LaunchedEffect(searchQuery, selectedCategory, currentPage) { // 🔥 Ajout de currentPage ici
+    LaunchedEffect(searchQuery, selectedCategory, currentPage) {
         coroutineScope.launch {
             try {
-
                 val query = if (searchQuery.isNotEmpty()) searchQuery else if (selectedCategory == "All") "" else selectedCategory
-
-                println("🔍 Requête envoyée: '$query', Page: $currentPage")
-
-                val newRecipes = recipeApi.searchRecipes(query, currentPage) // ✅ Page mise à jour
+                val newRecipes = recipeApi.searchRecipes(query, currentPage)
                 val filteredRecipes = if (selectedCategory == "All") {
-                    newRecipes
+                    newRecipes.take(30)
                 } else {
                     newRecipes.filter { recipe ->
                         recipe.ingredients.any { it.contains(selectedCategory, ignoreCase = true) }
-                    }
+                    }.take(30)
                 }
-
                 onRecipesLoaded(filteredRecipes)
             } catch (e: Exception) {
-                println("Erreur lors du chargement des recettes : ${e.message}")
             }
         }
     }
@@ -78,7 +69,7 @@ fun MainScreen(
     Scaffold(
         topBar = {
             Column {
-                Spacer(modifier = Modifier.height(0.dp)) // Espace avant la barre supérieure
+                Spacer(modifier = Modifier.height(0.dp))
                 TopAppBar(
                     title = { Text("Recettes", color = MaterialTheme.colors.onPrimary) },
                     backgroundColor = AnzacColor
@@ -125,7 +116,6 @@ fun MainScreen(
                     enabled = currentPage > 1,
                     colors = ButtonDefaults.buttonColors(backgroundColor = AnzacColor),
                     shape = RoundedCornerShape(20.dp)
-
                 ) {
                     Text("Previous", color = MaterialTheme.colors.onPrimary)
                 }
@@ -133,11 +123,9 @@ fun MainScreen(
                 Text("Page $currentPage", modifier = Modifier.align(Alignment.CenterVertically))
 
                 Button(
-                    onClick = { if (currentPage < maxPages) onPageChange(currentPage + 1) },
-                    enabled = currentPage < maxPages,
+                    onClick = { onPageChange(currentPage + 1) },
                     colors = ButtonDefaults.buttonColors(backgroundColor = AnzacColor),
                     shape = RoundedCornerShape(20.dp)
-
                 ) {
                     Text("Next", color = MaterialTheme.colors.onPrimary)
                 }
@@ -168,7 +156,6 @@ fun RecipeCard(recipe: Recipe, onRecipeClick: (Recipe) -> Unit) {
             .fillMaxWidth()
             .padding(8.dp)
             .clickable { onRecipeClick(recipe) },
-
     ) {
         Column {
             Image(
@@ -180,6 +167,5 @@ fun RecipeCard(recipe: Recipe, onRecipeClick: (Recipe) -> Unit) {
         }
     }
 }
-
 
 

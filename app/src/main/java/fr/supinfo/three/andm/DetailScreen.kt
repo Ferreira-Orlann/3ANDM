@@ -12,28 +12,23 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-
-
 import fr.supinfo.three.andm.ui.theme.AnzacColor
 
 @Composable
 fun DetailScreen(recipeId: Int, onBack: () -> Unit, paddingValues: Recipe, recipeApi: RecipeApi) {
-    var recipe by remember { mutableStateOf<RecipeDetail?>(null) } // Utilise RecipeDetail ici
+    var recipe by remember { mutableStateOf<RecipeDetail?>(null) }
     var isLoading by remember { mutableStateOf(true) }
 
-    // Effet pour charger la recette
     LaunchedEffect(recipeId) {
         isLoading = true
         try {
             recipe = recipeApi.getRecipeById(recipeId)
         } catch (e: Exception) {
-            println("Erreur lors de la récupération de la recette: ${e.message}")
         } finally {
             isLoading = false
         }
     }
 
-    // Affichez un message de chargement tant que la recette n'est pas disponible
     if (isLoading) {
         Scaffold { paddingValues ->
             Column(modifier = Modifier.padding(paddingValues)) {
@@ -45,13 +40,12 @@ fun DetailScreen(recipeId: Int, onBack: () -> Unit, paddingValues: Recipe, recip
                         painter = painterResource(id = R.drawable.food),
                         contentDescription = "Chargement",
                         modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop // L'image couvre toute la taille de l'écran
+                        contentScale = ContentScale.Crop
                     )
                 }
             }
         }
     } else {
-        // Une fois que la recette est chargée, affichez les détails
         recipe?.let {
             Scaffold(
                 topBar = {
@@ -95,7 +89,6 @@ fun DetailScreen(recipeId: Int, onBack: () -> Unit, paddingValues: Recipe, recip
                 }
             }
         } ?: run {
-            // Si la recette n'est pas trouvée
             Scaffold { paddingValues ->
                 Column(modifier = Modifier.padding(paddingValues)) {
                     Text("Recette non trouvée.", color = AnzacColor)
@@ -104,5 +97,3 @@ fun DetailScreen(recipeId: Int, onBack: () -> Unit, paddingValues: Recipe, recip
         }
     }
 }
-
-

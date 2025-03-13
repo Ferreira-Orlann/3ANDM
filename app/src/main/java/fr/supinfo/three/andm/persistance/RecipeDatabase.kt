@@ -25,8 +25,7 @@ abstract class RecipeDatabase: RoomDatabase() {
                     context.applicationContext,
                     RecipeDatabase::class.java,
                     "recipe_database"
-                ) // Ajoute ceci pour éviter les conflits de version
-                    .build()
+                ).build()
                 INSTANCE = instance
                 instance
             }
