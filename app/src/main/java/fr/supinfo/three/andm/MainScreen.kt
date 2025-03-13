@@ -75,8 +75,6 @@ fun MainScreen(
         }
     }
 
-
-
     Scaffold(
         topBar = {
             Column {
@@ -182,5 +180,6 @@ fun RecipeCard(recipe: Recipe, onRecipeClick: (Recipe) -> Unit) {
         }
     }
 }
+
 
 

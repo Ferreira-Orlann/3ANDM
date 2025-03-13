@@ -41,6 +41,9 @@ interface RecipeDao {
         return recipes
     }
 
+    @Query("SELECT * FROM recipes WHERE title LIKE '%' || :query || '%' OR ingredients LIKE '%' || :query || '%'")
+    suspend fun searchRecipesByQuery(query: String): List<RecipeEntity>
+
     @Query("SELECT * FROM recipes WHERE pk = :id")
     suspend fun getRecipeByIdFromDb(id: Int): RecipeEntity
 
